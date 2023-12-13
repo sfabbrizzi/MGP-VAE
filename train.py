@@ -4,7 +4,7 @@ from torchvision.utils import save_image
 import os
 from itertools import cycle
 from torch.utils.data import DataLoader
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from networks import Encoder, Decoder
 from utils import weights_init, plot_training_images
@@ -97,10 +97,20 @@ if (__name__ == '__main__'):
     mse_loss = nn.MSELoss()
 
     # add option to run on gpu
-    if (CUDA):
+    if (CUDA and torch.cuda.is_available()):
         encoder.cuda()
         decoder.cuda()
         mse_loss.cuda()
+
+        device = "cuda"
+    elif (CUDA and torch.backends.mps.is_available()):
+        encoder.to("mps")
+        decoder.to("mps")
+        mse_loss.to("mps")
+
+        device = "mps"
+    else:
+        device = "cpu"
 
     # optimizer
     optimizer = torch.optim.Adam(
@@ -110,6 +120,9 @@ if (__name__ == '__main__'):
 
     if torch.cuda.is_available() and not CUDA:
         print("WARNING: You have a CUDA device, "
+              "so you should probably run with --cuda")
+    if torch.backends.mps.is_available() and not CUDA:
+        print("WARNING: You have a MPS device, "
               "so you should probably run with --cuda")
 
     # creating directories
@@ -133,7 +146,8 @@ if (__name__ == '__main__'):
 
     sigma_p_inv, det_p = setup_pz(NUM_FEA,
                                   FEA_DIM,
-                                  FEA)
+                                  FEA,
+                                  device=device)
 
     # creating copies of encoder-decoder objects
     # for style transfer visualization during training
@@ -146,9 +160,12 @@ if (__name__ == '__main__'):
     encoder_test.eval()
     decoder_test.eval()
 
-    if (CUDA):
+    if (CUDA and torch.cuda.is_available()):
         encoder_test.cuda()
         decoder_test.cuda()
+    elif (CUDA and torch.backends.mps.is_available()):
+        encoder_test.to("mps")
+        decoder_test.to("mps")
 
     lowest_loss = float('inf')
 
@@ -157,7 +174,12 @@ if (__name__ == '__main__'):
         for iteration in range(len(dataset)//BATCH_SIZE):
 
             # load a batch of videos
-            X_in = next(loader).float().cuda()
+            X_in = next(loader).float()
+
+            if (CUDA and torch.cuda.is_available()):
+                X_in = X_in.cuda()
+            elif (CUDA and torch.backends.mps.is_available()):
+                X_in = X_in.to("mps")
 
             Y_flat = X_in.view(X_in.size()[0], -1)
 
@@ -177,7 +199,9 @@ if (__name__ == '__main__'):
 
             mul1_transpose = torch.transpose(muL1, dim0=1, dim1=2)
             if (ZERO_MEAN_FEA):
-                mu_p_transpose = get_prior_mean(FEA_MEAN_S, FEA_MEAN_E)
+                mu_p_transpose = get_prior_mean(FEA_MEAN_S,
+                                                FEA_MEAN_E,
+                                                device=device)
                 kl_loss1 = KL_loss_L1(sigma_p_inv,
                                       sigma_q1,
                                       mul1_transpose,
@@ -221,7 +245,12 @@ if (__name__ == '__main__'):
 
         # retrieving another batch to reconstruct
         # for saving reconstructed images
-        X_in = next(loader).float().cuda()
+        X_in = next(loader).float()
+
+        if (CUDA and torch.cuda.is_available()):
+            X_in = X_in.cuda()
+        elif (CUDA and torch.backends.mps.is_available()):
+            X_in = X_in.to("mps")
 
         # saving reconstructed images
         original_sample = X_in.cpu()[0, :, :, :, :]
@@ -262,8 +291,15 @@ if (__name__ == '__main__'):
                 torch.load(os.path.join('checkpoints', DECODER_SAVE))
                 )
 
-            video1 = next(loader).float().cuda()[0].unsqueeze(0)
-            video2 = next(loader).float().cuda()[0].unsqueeze(0)
+            video1 = next(loader).float()[0].unsqueeze(0)
+            video2 = next(loader).float()[0].unsqueeze(0)
+
+            if (CUDA and torch.cuda.is_available()):
+                video1 = video1.cuda()
+                video2 = video2.cuda()
+            elif (CUDA and torch.backends.mps.is_available()):
+                video1 = video1.to("mps")
+                video2 = video2.to("mps")
 
             X1_v1, KL1_v1, muL1_v1, det_q1_v1 = encoder_test(video1,
                                                              BATCH_SIZE=1)
@@ -281,4 +317,5 @@ if (__name__ == '__main__'):
                                  X1_v1,
                                  X1_v2,
                                  epoch,
-                                 decoder_test)
+                                 decoder_test,
+                                 device=device)

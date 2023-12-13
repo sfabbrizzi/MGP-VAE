@@ -9,11 +9,17 @@ from flags import (BATCH_SIZE,
                    NUM_INPUT_CHANNELS,
                    H,
                    W,
-                   KEEP_RHO)
+                   KEEP_RHO,
+                   CUDA)
 
 mask = np.ones(shape=(BATCH_SIZE, NUM_FRAMES, NDIM))
 mask[:, 0, :] = 0
-mk = torch.from_numpy(mask).float().cuda()
+mk = torch.from_numpy(mask).float()
+
+if (CUDA and torch.cuda.is_available()):
+    mk = mk.cuda()
+elif (CUDA and torch.backends.mps.is_available()):
+    mk = mk.to("mps")
 
 
 def fill_triangular(vector):
@@ -62,7 +68,13 @@ def fill_triangular(vector):
 
 
 raw_matSum = np.ones(NUM_FRAMES * (NUM_FRAMES + 1) // 2)
-matSum = torch.from_numpy(raw_matSum).float().cuda()
+matSum = torch.from_numpy(raw_matSum).float()
+
+if (CUDA and torch.cuda.is_available()):
+    matSum = matSum.cuda()
+elif (CUDA and torch.backends.mps.is_available()):
+    matSum = matSum.to("mps")
+
 matSum = fill_triangular(matSum)
 
 
@@ -90,25 +102,29 @@ def matrix_diag_3d(diagonal):
     return result
 
 
-def create_path(K_L1, mu_L1, BATCH_SIZE=BATCH_SIZE):
+def create_path(K_L1, mu_L1, BATCH_SIZE=BATCH_SIZE, device="cuda"):
     # this function samples random paths from given GP using lower
     # triangular matrices K_L (obtained from covariance matrices) and mean mu_L
 
-    inc_L1 = torch.randn(BATCH_SIZE, NUM_FRAMES, NDIM).cuda()
+    inc_L1 = torch.randn(BATCH_SIZE, NUM_FRAMES, NDIM).to(device)
     # shape = (BATCH_SIZE, NUM_FRAMES, NDIM)
     X1 = torch.einsum('ikj,ijlk->ilj', inc_L1, K_L1) + mu_L1
     return X1
 
 
-def create_path_rho(K_L1, mu_L1, BATCH_SIZE=BATCH_SIZE, rho=0.5):
+def create_path_rho(K_L1,
+                    mu_L1,
+                    BATCH_SIZE=BATCH_SIZE,
+                    rho=0.5,
+                    device="cuda"):
     # this function samples random paths from given GP using lower triangular
     # matrices K_L (obtained from covariance matrices) and mean mu_L
 
-    c11 = torch.randn(BATCH_SIZE, NUM_FRAMES).cuda()
+    c11 = torch.randn(BATCH_SIZE, NUM_FRAMES).to(device)
     c12 = (rho * c11) + (np.sqrt(1.0 - (rho * rho)) * torch.randn(
         BATCH_SIZE,
         NUM_FRAMES).cuda())
-    c21 = torch.randn(BATCH_SIZE, NUM_FRAMES).cuda()
+    c21 = torch.randn(BATCH_SIZE, NUM_FRAMES).to(device)
     c22 = (rho * c21) + (np.sqrt(1.0 - (rho * rho)) * torch.randn(
         BATCH_SIZE,
         NUM_FRAMES).cuda())
@@ -241,10 +257,12 @@ class Encoder(nn.Module):
 
         muL1 = self.MLP_3(x).view(-1, NUM_FRAMES, NDIM)
 
+        device = list(self.state_dict().items())[0][1].device
+
         if (KEEP_RHO):
-            X1 = create_path_rho(KL1, muL1, BATCH_SIZE)
+            X1 = create_path_rho(KL1, muL1, BATCH_SIZE, device=device)
         else:
-            X1 = create_path(KL1, muL1, BATCH_SIZE)
+            X1 = create_path(KL1, muL1, BATCH_SIZE, device=device)
 
         return X1, KL1, muL1, det_q1
 
