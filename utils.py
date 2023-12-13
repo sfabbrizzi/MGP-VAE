@@ -60,7 +60,8 @@ def plot_training_images(
         X1_v1,
         X1_v2,
         epoch,
-        decoder_test
+        decoder_test,
+        device="cuda"
         ):
 
     # visualize test data feature transfer
@@ -103,7 +104,7 @@ def plot_training_images(
 
         # video 1
         v1_feature_transferred = torch.zeros(NUM_FRAMES,
-                                             NDIM).unsqueeze(0).cuda()
+                                             NDIM).unsqueeze(0).to(device)
 
         for i in range(NUM_FEA):
             if (i == j):
@@ -130,7 +131,7 @@ def plot_training_images(
 
         # video 2
         v2_feature_transferred = torch.zeros(NUM_FRAMES,
-                                             NDIM).unsqueeze(0).cuda()
+                                             NDIM).unsqueeze(0).to(device)
 
         for i in range(NUM_FEA):
             if (i == j):

@@ -123,11 +123,11 @@ def create_path_rho(K_L1,
     c11 = torch.randn(BATCH_SIZE, NUM_FRAMES).to(device)
     c12 = (rho * c11) + (np.sqrt(1.0 - (rho * rho)) * torch.randn(
         BATCH_SIZE,
-        NUM_FRAMES).cuda())
+        NUM_FRAMES).to(device))
     c21 = torch.randn(BATCH_SIZE, NUM_FRAMES).to(device)
     c22 = (rho * c21) + (np.sqrt(1.0 - (rho * rho)) * torch.randn(
         BATCH_SIZE,
-        NUM_FRAMES).cuda())
+        NUM_FRAMES).to(device))
 
     inc_L1 = torch.stack([c11, c12, c21, c22], dim=2)
     # shape = (BATCH_SIZE, NUM_FRAMES, NDIM)

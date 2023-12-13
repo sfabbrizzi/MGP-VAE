@@ -11,7 +11,7 @@ from flags import (NUM_FRAMES,
 
 
 # returns inverse variance and determinant of latent priors
-def setup_pz(num_fea, fea_dim, fea_priors):
+def setup_pz(num_fea, fea_dim, fea_priors, device="cuda"):
 
     sigmas, dets = [], []
 
@@ -32,16 +32,16 @@ def setup_pz(num_fea, fea_dim, fea_priors):
             dets.append(det)
 
     sigma_p = torch.stack(sigmas)
-    sigma_p_inv = torch.inverse(sigma_p).cuda()
-    det_p = torch.stack(dets).cuda()
+    sigma_p_inv = torch.inverse(sigma_p).to(device)
+    det_p = torch.stack(dets).to(device)
 
     return sigma_p_inv, det_p
 
 
 # set mean of prior on latent space
-def get_prior_mean(mean_fea_s, mean_fea_e):
+def get_prior_mean(mean_fea_s, mean_fea_e, device="cuda"):
 
-    mean = torch.zeros(BATCH_SIZE, NDIM, NUM_FRAMES).cuda()
+    mean = torch.zeros(BATCH_SIZE, NDIM, NUM_FRAMES).to(device)
 
     if (NUM_FEA > 5 or NUM_FEA < 1):
         raise Exception(
