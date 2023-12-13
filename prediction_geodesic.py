@@ -92,7 +92,13 @@ def compute_norm(x):
 # compute total energy of the geodesic path
 def sum_energy(z_collection):
 
-    delta_e = torch.FloatTensor(1, NUM_SAMPLE_GEO_OUTPUT).zero_().cuda()
+    delta_e = torch.FloatTensor(1, NUM_SAMPLE_GEO_OUTPUT).zero_()
+
+    if (CUDA and torch.cuda.is_available()):
+        delta_e = delta_e.cuda()
+    elif (CUDA and torch.backends.mps.is_available()):
+        delta_e = delta_e.to("mps")
+
     for i in range(1, N):
         delta_e += compute_norm(
             find_energy(z_collection[i-1].view(NUM_SAMPLE_GEO_OUTPUT, -1),
@@ -185,10 +191,15 @@ if (__name__ == '__main__'):
     prediction_model = Prediction_Model()
     prediction_model.apply(weights_init)
 
-    if (CUDA):
-        encoder.cuda()
-        decoder.cuda()
-        prediction_model.cuda()
+    if (CUDA and torch.cuda.is_available()):
+        encoder = encoder.cuda()
+        decoder = decoder.cuda()
+        prediction_model = prediction_model.cuda()
+
+    elif (CUDA and torch.backends.mps.is_available()):
+        encoder = encoder.to("mps")
+        decoder = decoder.to("mps")
+        prediction_model = prediction_model.to("mps")
 
     optimizer = torch.optim.Adam(list(prediction_model.parameters()),
                                  lr=LR,
@@ -206,7 +217,12 @@ if (__name__ == '__main__'):
 
             optimizer.zero_grad()
 
-            X_in = next(loader).float().cuda()
+            X_in = next(loader).float()
+
+            if (CUDA and torch.cuda.is_available()):
+                X_in = X_in.cuda()
+            elif (CUDA and torch.backends.mps.is_available()):
+                X_in = X_in.to("mps")
 
             X1, KL1, muL1, det_q1 = encoder(X_in)
             X1 = X1.view(BATCH_SIZE, NUM_FRAMES, NDIM)

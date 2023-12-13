@@ -98,15 +98,15 @@ if (__name__ == '__main__'):
 
     # add option to run on gpu
     if (CUDA and torch.cuda.is_available()):
-        encoder.cuda()
-        decoder.cuda()
-        mse_loss.cuda()
+        encoder = encoder.cuda()
+        decoder = decoder.cuda()
+        mse_loss = mse_loss.cuda()
 
         device = "cuda"
     elif (CUDA and torch.backends.mps.is_available()):
-        encoder.to("mps")
-        decoder.to("mps")
-        mse_loss.to("mps")
+        encoder = encoder.to("mps")
+        decoder = decoder.to("mps")
+        mse_loss = mse_loss.to("mps")
 
         device = "mps"
     else:
@@ -161,11 +161,11 @@ if (__name__ == '__main__'):
     decoder_test.eval()
 
     if (CUDA and torch.cuda.is_available()):
-        encoder_test.cuda()
-        decoder_test.cuda()
+        encoder_test = encoder_test.cuda()
+        decoder_test = decoder_test.cuda()
     elif (CUDA and torch.backends.mps.is_available()):
-        encoder_test.to("mps")
-        decoder_test.to("mps")
+        encoder_test = encoder_test.to("mps")
+        decoder_test = decoder_test.to("mps")
 
     lowest_loss = float('inf')
 

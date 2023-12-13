@@ -49,8 +49,8 @@ if __name__ == "__main__":
     video2 = next(loader).float()[0].unsqueeze(0)
 
     if (CUDA and torch.cuda.is_available()):
-        encoder.cuda()
-        decoder.cuda()
+        encoder = encoder.cuda()
+        decoder = decoder.cuda()
 
         video1 = video1.cuda()
         video2 = video2.cuda()

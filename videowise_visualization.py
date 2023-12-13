@@ -61,8 +61,8 @@ if __name__ == "__main__":
         encoder.cuda()
         decoder.cuda()
     elif (CUDA and torch.backends.mps.is_available()):
-        encoder.to("mps")
-        decoder.to("mps")
+        encoder = encoder.to("mps")
+        decoder = decoder.to("mps")
 
     for i in range(NUM_FEA):
 
@@ -72,7 +72,12 @@ if __name__ == "__main__":
         for j in range(NUM_POINTS_VISUALIZATION):
 
             X_in = next(loader)
-            X_in = X_in.float().cuda()
+            X_in = X_in.float()
+
+            if (CUDA and torch.cuda.is_available()):
+                X_in = X_in.cuda()
+            elif (CUDA and torch.backends.mps.is_available()):
+                X_in = X_in.to("mps")
 
             X1, KL1, muL1, det_q1 = encoder(X_in)
             X1 = X1.data.cpu().numpy()
