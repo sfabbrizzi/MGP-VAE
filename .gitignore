@@ -1,0 +1,18 @@
+*.egg-info
+data/*
+**/__pycache__/
+**/.ipynb_checkpoints/
+.spyproject
+*.drawio
+.DS_Store
+.idea
+notebooks/Prova.ipynb
+.hypothesis
+.coverage
+results/training/*
+.vscode
+.pytest_cache
+dead_code/*
+runs/
+
+# Temporary
