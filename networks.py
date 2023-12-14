@@ -333,7 +333,7 @@ class Decoder(nn.Module):
         x = x1
 
         # flatten
-        x = x.view(BATCH_SIZE, NUM_FRAMES * NDIM)
+        x = x.reshape(BATCH_SIZE, NUM_FRAMES * NDIM)
         x = self.bn_dense1(self.elu(self.dense1(x)))
         x = self.bn_dense2(self.elu(self.dense2(x)))
 

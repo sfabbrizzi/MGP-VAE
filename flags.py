@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser()
 # add arguments
 parser.add_argument('--cuda',
                     type=bool,
-                    default=True,
+                    default=False,
                     help="run the following code on a GPU")
 
 parser.add_argument('--dataset',
@@ -35,7 +35,7 @@ parser.add_argument('--num_channels',
                     help="number of channels in the images")
 parser.add_argument('--num_frames',
                     type=int,
-                    default=8,
+                    default=20,
                     help="number of frames in the video")
 
 parser.add_argument('--num_dim',
@@ -184,7 +184,7 @@ LOAD_SAVED = FLAGS.load_saved
 
 # data paths
 if (FLAGS.dataset == 'moving_mnist'):
-    DATA_PATH = "./data/moving_mnist/"
+    DATA_PATH = "../data/raw/"
 elif (FLAGS.dataset == 'dsprites_color'):
     DATA_PATH = './data/dsprites/trainset_dsprites_data_color_with_motion.h5'
 elif (FLAGS.dataset == 'dsprites_color_test'):

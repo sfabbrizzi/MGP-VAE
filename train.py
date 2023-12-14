@@ -9,9 +9,10 @@ from torch.utils.tensorboard import SummaryWriter
 from networks import Encoder, Decoder
 from utils import weights_init, plot_training_images
 from setup_priors import setup_pz, get_prior_mean
-from dataloader import load_dataset
+from torchvision.datasets import MovingMNIST
 
-from flags import (LOAD_SAVED,
+from flags import (DATA_PATH,
+                   LOAD_SAVED,
                    ENCODER_SAVE,
                    DECODER_SAVE,
                    CUDA,
@@ -135,7 +136,7 @@ if (__name__ == '__main__'):
     if not os.path.exists('style_transfer_training'):
         os.makedirs('style_transfer_training')
 
-    dataset = load_dataset()
+    dataset = MovingMNIST(DATA_PATH)
     loader = cycle(DataLoader(dataset,
                               batch_size=BATCH_SIZE,
                               shuffle=True,

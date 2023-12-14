@@ -13,6 +13,8 @@ results/training/*
 .vscode
 .pytest_cache
 dead_code/*
-runs/
+runs/*
+reconstructed_images/*
+style_transfer_training/*
 
 # Temporary
